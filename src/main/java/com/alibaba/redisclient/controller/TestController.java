@@ -1,0 +1,74 @@
+package com.alibaba.redisclient.controller;
+
+import com.alibaba.redisclient.entity.RedisSetRequest;
+import com.alibaba.redisclient.service.serviceImpl.RedisServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.*;
+
+import static com.alibaba.redisclient.service.serviceImpl.RedisServiceImpl.*;
+
+/***
+ * @author pei
+ * @date 2023/8/24 10:18
+ */
+@RestController
+@RequestMapping("/")
+@Slf4j
+public class TestController {
+    @PostMapping("/start")
+    public String start() {
+        log.info("压测开始");
+        connectToRedisAndSendPackets();
+        return "success";
+    }
+
+    @PostMapping("/testRedis")
+    public String testRedis() {
+        try {
+            RedisConnectionFactory connectionFactory = createConnectionFactory();
+            connectionFactory.getConnection().isClosed();
+        } catch (Exception e) {
+            return "redis connect error：" + e.getMessage();
+        }
+        return "redis connect success,"+ REDIS_HOST;
+    }
+
+
+    /**
+     * 修改redis连接设置，修改设置后，需要shutdown线程后，重新start生效
+     *
+     * @param redisSetRequest
+     * @return
+     */
+    @PostMapping("/set")
+    public String set(@RequestBody RedisSetRequest redisSetRequest) {
+        RedisServiceImpl.REDIS_HOST = redisSetRequest.getHost();
+        RedisServiceImpl.REDIS_PORT = redisSetRequest.getPort();
+        RedisServiceImpl.PASSWORD = redisSetRequest.getPassword();
+        return "success";
+    }
+
+    @PostMapping("/shutdown")
+    public String shutdown() {
+        RedisServiceImpl.shutdown = true;
+        running = false;
+        log.info("压测结束");
+        return "success";
+    }
+
+    @PostMapping("/stop")
+    public String stop() {
+        RedisServiceImpl.running = false;
+        log.info("压测暂停");
+        return "success";
+    }
+
+    @PostMapping("/run")
+    public String run() {
+        RedisServiceImpl.running = true;
+        log.info("压测继续执行");
+        return "success";
+    }
+}
