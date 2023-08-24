@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * @author pei
@@ -22,7 +23,9 @@ public class RedisServiceImpl {
     public static final int NUM_CONNECTIONS_ACTIVE_EVERY_MINUTES = 400;
 
     public static String REDIS_HOST = "r-bp1e72xo07rlzy9ccd.redis.rds.aliyuncs.com";
+
     public static int REDIS_PORT = 6379;
+
     public static String PASSWORD = "Yaoyou@123456";
 
     //运行状态，用于暂停压测
@@ -35,6 +38,7 @@ public class RedisServiceImpl {
         connectToRedisAndSendPackets();
     }
 
+    public static AtomicInteger threadNum=new AtomicInteger(0);
     /**
      * 连接redis并发送数据
      */
@@ -56,16 +60,11 @@ public class RedisServiceImpl {
 
         //600个线程，每个线程每秒发一次数据
         for (int i = 0; i < NUM_CONNECTIONS_ACTIVE_EVERY_SECOND; i++) {
-            RedisTemplate<String, String> redisTemplate;
-            try {
-                redisTemplate = createRedisTemplate(connectionFactory);
-            } catch (Exception e) {
-                log.error("redis connect error ,info：" + e.getMessage());
-                return e.getMessage();
-            }
-
+            RedisTemplate<String, String> redisTemplate=createRedisTemplate(connectionFactory);
             threadPoolUtil.execute(() -> {
+                log.info("创建了新线程"+threadNum.addAndGet(1)+","+Thread.currentThread().getName());
                 while (!shutdown) {
+                    log.info("线程："+Thread.currentThread().getName()+"运行了一次");
                     if (running) {
                         Random random = new Random();
                         int key = random.nextInt(10);
@@ -84,16 +83,11 @@ public class RedisServiceImpl {
 
         //400个线程 每分钟发一次数据
         for (int i = 0; i < NUM_CONNECTIONS_ACTIVE_EVERY_MINUTES; i++) {
-            RedisTemplate<String, String> redisTemplate;
-            try {
-                redisTemplate = createRedisTemplate(connectionFactory);
-                connectionFactory.getConnection().isClosed();
-            } catch (Exception e) {
-                log.error("redis连接失败，报错：" + e.getMessage());
-                return e.getMessage();
-            }
+            RedisTemplate<String, String> redisTemplate=createRedisTemplate(connectionFactory);
             threadPoolUtil.execute(() -> {
+                log.info("创建了新线程"+threadNum.addAndGet(1));
                 while (!shutdown) {
+                    log.info("线程："+Thread.currentThread().getName()+"运行了一次");
                     if (running) {
                         Random random = new Random();
                         int key = random.nextInt(10);
