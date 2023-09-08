@@ -2,6 +2,7 @@ package com.alibaba.redisclient.controller;
 
 import com.alibaba.redisclient.entity.RedisSetRequest;
 import com.alibaba.redisclient.service.serviceImpl.RedisServiceImpl;
+import com.alibaba.redisclient.util.SocketClient2;
 import com.alibaba.redisclient.util.SocketUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -79,6 +80,13 @@ public class TestController {
     public String startSocket(String host, int port, Integer num) throws IOException {
         SocketUtil.sendRequest(host,port,num);
         log.info("压测Socket执行完毕");
+        return "success";
+    }
+
+    @GetMapping("/startSocketClientAndSendData")
+    public String startSocket(Integer seconds,String ip,Integer port) throws IOException, InterruptedException {
+        SocketClient2.startSocketClient(seconds,ip,port);
+        log.info("开启socket客户端发生数据");
         return "success";
     }
 

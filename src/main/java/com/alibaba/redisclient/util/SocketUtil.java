@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class SocketUtil {
 
     public static void main(String[] args) throws IOException {
-        sendRequest("127.0.0.1", 6379, 10);
+        sendRequest("127.0.0.1", 9090, 1);
     }
 
     public static ArrayList<Socket> sockets = new ArrayList<>();
